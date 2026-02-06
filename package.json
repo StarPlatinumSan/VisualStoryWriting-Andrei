@@ -1,0 +1,50 @@
+{
+  "name": "visualstorywriting",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "NODE_ENV=development vite build --mode development --base=/VisualStoryWriting",
+    "build_sup": "vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@nextui-org/react": "^2.4.2",
+    "@xyflow/react": "^12.0.4",
+    "d3-force": "^3.0.0",
+    "diff": "^5.2.0",
+    "framer-motion": "^11.2.12",
+    "openai": "^4.52.0",
+    "partial-json": "^0.1.7",
+    "react": "^18.3.1",
+    "react-d3-tree": "^3.6.2",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.2.1",
+    "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.26.1",
+    "slate": "^0.103.0",
+    "slate-history": "^0.109.0",
+    "slate-react": "^0.105.0",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/d3-force": "^3.0.10",
+    "@types/diff": "^5.2.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.13.1",
+    "@typescript-eslint/parser": "^7.13.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.7",
+    "vite": "^5.3.1",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.2.2"
+  }
+}
