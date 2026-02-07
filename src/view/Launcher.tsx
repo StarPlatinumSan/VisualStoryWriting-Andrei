@@ -151,7 +151,7 @@ export default function Launcher() {
               transition={{ duration: 0.5, ease: "easeOut", delay: 0.05 }}
               viewport={{ once: true, amount: 0.35 }}
             >
-              <h3 className="mediumTitle">Get the Entities from your story</h3>
+              <h3 className="mediumTitle">Entities</h3>
               <p>
                 {" "}
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, incidunt ullam illo architecto soluta in culpa optio distinctio corporis. Ipsum exercitationem repudiandae fugiat
