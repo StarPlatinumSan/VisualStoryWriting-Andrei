@@ -340,7 +340,7 @@ export default function Launcher() {
 
           <div className="footerBottom">
             <span>MIT Licensed Software</span>
-            <span>Provided “as is”, without warranty of any kind</span>
+            <span>Provided without warranty of any kind</span>
           </div>
         </div>
       </footer>
