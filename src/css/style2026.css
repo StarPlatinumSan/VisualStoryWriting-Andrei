@@ -1,0 +1,92 @@
+/* This CSS sheet serves as a catalogue of more general styling that may always be used in the future as it mimics a more flexible Tailwind format */
+
+.box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mainBox {
+  background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+  min-height: 100vh;
+}
+
+.boxHorizontal {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 1rem;
+}
+
+.boxHorizontal img {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.padding-1rem {
+  padding: 1rem;
+}
+
+.margin-1rem {
+  margin: 1rem;
+}
+
+.width-100 {
+  width: 100%;
+}
+
+.width-75 {
+  width: 75%;
+}
+
+.width-50 {
+  width: 50%;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.mediumTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.smallTitle {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.text {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.promptInput {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.image {
+  max-width: 20rem;
+  height: auto;
+}
+
+.imageGenRoot {
+  position: relative;
+  padding-top: 2.5rem;
+}
+
+.backButton {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 2;
+}
