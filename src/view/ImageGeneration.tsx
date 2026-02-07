@@ -11,12 +11,14 @@ export default function ImageGeneration() {
 
   return (
     <div className="box imageGenRoot">
-      <Button className="backButton" onClick={() => navigate("/")}>Back</Button>
+      <Button className="backButton" onClick={() => navigate("/")}>
+        Back
+      </Button>
       <h2 className="mediumTitle">Image Generation Testing Ground</h2>
       <p className="text">This is a testing ground for image generation features. It serves for the dev phase to test the local AI.</p>
 
       <section className="box padding-1rem width-50">
-        <input className="promptInput" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Prompt your image here." />
+        <input className="promptInput width-100" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Prompt your image here." />
         <Button
           isDisabled={isGenerating || prompt.trim().length === 0}
           onClick={async () => {

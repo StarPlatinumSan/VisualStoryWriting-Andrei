@@ -1,5 +1,9 @@
 /* This CSS sheet serves as a catalogue of more general styling that may always be used in the future as it mimics a more flexible Tailwind format */
 
+footer {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 .box {
   display: flex;
   flex-direction: column;

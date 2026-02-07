@@ -67,3 +67,7 @@ a:hover {
 .overflow-scroll {
   overflow: scroll !important;
 }
+html, body, #root {
+  min-height: 100%;
+  background: radial-gradient(1200px 600px at 20% 10%, #f3f5ff 0%, #eef2f7 40%, #f7f8fb 100%);
+}
