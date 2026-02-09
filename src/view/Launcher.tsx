@@ -191,7 +191,7 @@ export default function Launcher() {
 
           <Divider />
 
-          <div className="miniFeature">
+          <div className="miniFeature previewCard">
             <motion.div
               className="miniFeatureCard"
               initial={{ opacity: 0, y: 18 }}
