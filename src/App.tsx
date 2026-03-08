@@ -9,47 +9,47 @@ import VisualWritingInterface from "./view/VisualWritingInterface";
 import ImageGeneration from "./view/ImageGeneration";
 
 function App() {
-  const router = createHashRouter(
-    [
-      {
-        path: "free-form",
-        loader: () => {
-          useStudyStore.getState().setIsDataSaved(false);
-          return null;
-        },
-        element: <VisualWritingInterface />,
-      },
-      {
-        path: "study",
-        element: <StudyInterface />,
-      },
-      {
-        path: "baseline",
-        element: <BaselineInterface />,
-      },
-      {
-        path: "/",
-        element: <Launcher />,
-      },
-      {
-        path: "image-generation",
-        element: <ImageGeneration />,
-      },
-    ],
-    /*{
+	const router = createHashRouter(
+		[
+			{
+				path: "free-form",
+				loader: () => {
+					useStudyStore.getState().setIsDataSaved(false);
+					return null;
+				},
+				element: <VisualWritingInterface />,
+			},
+			{
+				path: "study",
+				element: <StudyInterface />,
+			},
+			{
+				path: "baseline",
+				element: <BaselineInterface />,
+			},
+			{
+				path: "/",
+				element: <Launcher />,
+			},
+			{
+				path: "image-generation",
+				element: <ImageGeneration />,
+			},
+		]
+		/*{
     basename: import.meta.env.BASE_URL
   }*/
-  );
+	);
 
-  return (
-    <>
-      <StrictMode>
-        <NextUIProvider>
-          <RouterProvider router={router} />
-        </NextUIProvider>
-      </StrictMode>
-    </>
-  );
+	return (
+		<>
+			<StrictMode>
+				<NextUIProvider>
+					<RouterProvider router={router} />
+				</NextUIProvider>
+			</StrictMode>
+		</>
+	);
 }
 
 export default App;
