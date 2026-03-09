@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useModelStore } from "../../model/Model";
 import { ExtractedImageEntity, ImageEntitiesExtractor } from "../../model/prompts/textExtractors/ImageEntitiesExtractor";
 
-export default function ImagesEditor(props: { refreshToken?: number; onRefreshDone?: () => void; onEntitiesChange?: (entities: ExtractedImageEntity[]) => void }) {
+export default function ImagesEditor(props: { refreshToken?: number; clearToken?: number; onRefreshDone?: () => void; onEntitiesChange?: (entities: ExtractedImageEntity[]) => void }) {
   const text = useModelStore((state) => state.text);
   const graphEntities = useModelStore((state) => state.entityNodes);
   const [entities, setEntities] = useState<ExtractedImageEntity[]>([]);
@@ -12,6 +12,16 @@ export default function ImagesEditor(props: { refreshToken?: number; onRefreshDo
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
   const [isGeneratingAnyImage, setIsGeneratingAnyImage] = useState(false);
+
+  const clearImageSectionState = () => {
+    setEntities([]);
+    setImageByEntityKey({});
+    setLoadingByEntityKey({});
+    setErrorByEntityKey({});
+    setExtractError("");
+    setIsExtracting(false);
+    setIsGeneratingAnyImage(false);
+  };
 
   const getEntityKey = (entity: ExtractedImageEntity): string =>
     entity.name.trim().toLowerCase().replace(/\s+/g, " ");
@@ -89,7 +99,7 @@ export default function ImagesEditor(props: { refreshToken?: number; onRefreshDo
 
   const refreshFromText = async () => {
     if (!text.trim()) {
-      setEntities([]);
+      clearImageSectionState();
       return;
     }
 
@@ -120,6 +130,19 @@ export default function ImagesEditor(props: { refreshToken?: number; onRefreshDo
   }, [props.refreshToken]);
 
   useEffect(() => {
+    if (!text.trim()) {
+      clearImageSectionState();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text]);
+
+  useEffect(() => {
+    if (!props.clearToken) return;
+    clearImageSectionState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.clearToken]);
+
+  useEffect(() => {
     props.onEntitiesChange?.(
       entities.map((entity) => ({
         ...entity,
@@ -135,7 +158,9 @@ export default function ImagesEditor(props: { refreshToken?: number; onRefreshDo
 
       {!isExtracting && entities.length === 0 && !extractError && (
         <div style={{ color: "#6b7280" }}>
-          Click <strong>Refresh from text</strong> to extract entities for image generation.
+          {text.trim().length === 0
+            ? "No entities: the story text is empty."
+            : <>Click <strong>Refresh from text</strong> to extract entities for image generation.</>}
         </div>
       )}
 

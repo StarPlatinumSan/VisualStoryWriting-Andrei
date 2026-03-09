@@ -27,6 +27,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isExtracting, setIsExtracting] = useState(false);
   const [selectedTab, setSelectedTab] = useState('entities');
   const [imagesRefreshToken, setImagesRefreshToken] = useState(0);
+  const [imagesClearToken, setImagesClearToken] = useState(0);
   const [imageEntitiesForRewrite, setImageEntitiesForRewrite] = useState<ExtractedImageEntity[]>([]);
   const visualTopInset = 56;
   const isStale = useModelStore(state => state.isStale);
@@ -113,6 +114,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
               <div style={{ display: selectedTab === "images" ? "block" : "none", height: "100%" }}>
                 <ImagesEditor
                   refreshToken={imagesRefreshToken}
+                  clearToken={imagesClearToken}
                   onRefreshDone={() => setIsExtracting(false)}
                   onEntitiesChange={setImageEntitiesForRewrite}
                 />
@@ -125,6 +127,8 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             </Tabs>
 
             {!isReadOnly && <Button style={{ position: 'absolute', right: 10, top: 10, fontSize: 18 }} isIconOnly onClick={(e) => {
+              const confirmed = window.confirm("Clear all extracted data and image cards? This will remove entities, locations, actions, and images.");
+              if (!confirmed) return;
               console.log(useModelStore.getState().entityNodes);
               // Cancel exisitng animations because otherwise they might revive the deleted nodes
               LayoutUtils.stopAllSimulations();
@@ -134,6 +138,8 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
               useModelStore.getState().setFilteredActionsSegment(null, null);
               useModelStore.getState().setHighlightedActionsSegment(null, null);
               VisualRefresher.getInstance().reset();
+              setImageEntitiesForRewrite([]);
+              setImagesClearToken((v) => v + 1);
             }}><FaTrashAlt /></Button>}
           </div>
           <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>
