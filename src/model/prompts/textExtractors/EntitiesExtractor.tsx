@@ -53,6 +53,8 @@ export function EntitiesExtractor(text : string, center: {x: number, y: number})
         entityExtractor.execute().then((result) => {
             console.log("Extracted entities:", result.result.entities);
             resolve(useModelStore.getState().entityNodes);
-    })
+        }).catch((error) => {
+            reject(error);
+        })
     });
 }

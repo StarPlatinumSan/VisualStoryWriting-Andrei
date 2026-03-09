@@ -7,6 +7,7 @@ import { GrNext, GrPrevious } from 'react-icons/gr';
 import { ActionEdge, EntityNode, useModelStore } from '../../model/Model';
 import { ReorderActionPrompt } from '../../model/prompts/textEditors/ReorderActionPrompt';
 import { useStudyStore } from '../../study/StudyModel';
+import { getEntityEmoji, getSimpleName } from '../utils/display';
 
 type Timeline = Node<{
   width: number;
@@ -35,9 +36,12 @@ const actionLeftPadding = actionSpacing / 2;
 
 
 function TimelineNode(props: NodeProps<Timeline>) {
+  const displayEmoji = getEntityEmoji(props.data.entity.data.emoji);
+  const displayName = getSimpleName(props.data.entity.data.name);
+
   return <>
     <div style={{ width: props.data.width, height: props.data.height, background: '#dddddd', borderRadius: 3, transform: 'translate(0%, -50%)' }}>
-      <span style={{ transform: 'translate(-100%, -50%)', position: 'absolute', left: -10 }}>{props.data.entity.data.emoji} {props.data.entity.data.name}</span>
+      <span style={{ transform: 'translate(-100%, -50%)', position: 'absolute', left: -10 }}>{displayEmoji} {displayName}</span>
     </div>
   </>
 }
@@ -63,7 +67,7 @@ function ActionLinkNode(props: NodeProps<Link>) {
 
   const getMarker = (emoji: string, size: number) => {
     return <div style={{ width: size, height: size, background: 'rgba(255, 255, 255, 0)', borderRadius: 9999, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-      {emoji}
+      {getEntityEmoji(emoji)}
     </div>
   }
 

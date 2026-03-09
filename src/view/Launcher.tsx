@@ -18,12 +18,14 @@ export default function Launcher() {
 	const [isDark, setIsDark] = useState(() => localStorage.getItem("launcherTheme") === "dark");
 	const [showSetup, setShowSetup] = useState(false);
 	const setOpenAIKey = useModelStore((state) => state.setOpenAIKey);
+	const setAiProvider = useModelStore((state) => state.setAiProvider);
 	const resetModel = useModelStore((state) => state.reset);
 	const resetStudyModel = useStudyStore((state) => state.reset);
 
-	function startExample(text: string, data: any) {
+	function startExample(text: string, data: any, provider: "openai" | "local" = "openai") {
 		resetModel();
 		resetStudyModel();
+		setAiProvider(provider);
 
 		useModelStore.getState().setTextState([{ children: [{ text: text }] }], true, false);
 		useModelStore.getState().setIsStale(false);
@@ -52,7 +54,12 @@ export default function Launcher() {
 			useModelStore.getState().setActionEdges([]);
 		}
 
-		window.location.hash = "/free-form" + `?k=${btoa(accessKey)}`;
+		const query = new URLSearchParams();
+		query.set("provider", provider);
+		if (provider === "openai") {
+			query.set("k", btoa(accessKey));
+		}
+		window.location.hash = "/free-form" + `?${query.toString()}`;
 	}
 
 	const toggleTheme = () => {
@@ -290,7 +297,7 @@ export default function Launcher() {
 								<div className="box localBox">
 									<p>Test your Local AI to generate images</p>
 									<Button onClick={() => (window.location.hash = "/image-generation")}>Go To Testing Ground</Button>
-									<Button onClick={() => startExample("", null)}>Run with Local AI</Button>
+									<Button onClick={() => startExample("", null, "local")}>Run with Local AI</Button>
 								</div>
 							</CardBody>
 

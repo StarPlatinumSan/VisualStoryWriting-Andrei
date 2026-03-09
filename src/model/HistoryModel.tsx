@@ -50,6 +50,7 @@ export const useHistoryModelStore = create<HistoryModelState & HistoryModelActio
         if (node) {
             useModelStore.setState(node.node.state);
             // Make sure the editor is updated
+            globalEditor.selection = null;
             globalEditor.children = node.node.state.textState;
             globalEditor.onChange();
 

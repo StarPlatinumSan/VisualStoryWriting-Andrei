@@ -8,6 +8,7 @@ import { Entity, useModelStore } from '../../model/Model';
 import { useViewModelStore } from '../../model/ViewModel';
 import { MoveEntityPrompt } from '../../model/prompts/textEditors/MoveEntityPrompt';
 import LocationNodeComponent, { CreateLocatioNode } from './LocationNodeComponent';
+import { getEntityEmoji, getSimpleName } from '../utils/display';
 
 
 export type SpatialEntity = {
@@ -27,12 +28,14 @@ function SpatialEntityNodeComponent(props: NodeProps<SpatialEntityNode>) {
   const filteredEntities = useModelStore.getState().getFilteredEntityNodes(filter);
 
   let isFaded = !filteredEntities.map(entity => entity.data.name).includes(props.data.name);
+  const displayEmoji = getEntityEmoji(props.data.emoji);
+  const displayName = getSimpleName(props.data.name);
   
   return <>
     <div className='custom-drag-handle' style={{position: 'relative', zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px solid ${isSelected ? 'blue' : 'white'}`, width: 50, height: 50, boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px', padding: 10, background: 'white', borderRadius: 999, opacity: isFaded ? '0.3' : 1 }}>
-          <span style={{fontSize: 24}}>{props.data.emoji}</span>
+          <span style={{fontSize: 24}}>{displayEmoji}</span>
           <div style={{position: 'relative'}}>
-            <span style={{ whiteSpace: 'nowrap', fontWeight: 400, padding: 1, position: 'absolute', borderRadius: 3, background: 'white', transform: 'translate(-50%, 0%)',  boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px', top: -4, left: 0, fontSize: 10 }}>{props.data.name} </span>
+            <span style={{ whiteSpace: 'nowrap', fontWeight: 400, padding: 1, position: 'absolute', borderRadius: 3, background: 'white', transform: 'translate(-50%, 0%)',  boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px', top: -4, left: 0, fontSize: 10 }}>{displayName}</span>
           </div>
     </div>
   </>

@@ -51,7 +51,12 @@ export class VisualRefresher {
     }
 
     refreshFromText(text: string, onUpdate?: () => void, onFinished?: () => void) {
-        if (this.previousText === text) return;
+        if (this.previousText === text) {
+            // Nothing new to refresh; still notify callers so UI loading states can end.
+            if (onFinished) onFinished();
+            this.onRefreshDone();
+            return;
+        }
 
         // First we clear everything that became invalid since the new text
         LayoutUtils.stopAllSimulations();
@@ -63,6 +68,8 @@ export class VisualRefresher {
         useModelStore.getState().setHighlightedActionsSegment(null, null);
 
         this.clearInvalidActions(text);
+        this.clearInvalidEntities(text);
+        this.clearInvalidLocations();
         
         // Loop over the sentences in the text by finding the index position of the periods
         const regex = /[^.!?]+[.!?]+/g;
@@ -96,17 +103,23 @@ export class VisualRefresher {
             return prompt
         });
 
-        new ParallelPrompts(actionPromises).execute().then((results) => {
-            const actions = useModelStore.getState().actionEdges.map((actionEdge) => {
-                const sourceEntity = useModelStore.getState().entityNodes.find(entity => entity.id === actionEdge.source);
-                const targetEntity = useModelStore.getState().entityNodes.find(entity => entity.id === actionEdge.target);
-                return {name: actionEdge.data?.name, source: sourceEntity?.data.name, target: targetEntity?.data.name, location: actionEdge.data?.sourceLocation, passage: actionEdge.data?.passage}
+        new ParallelPrompts(actionPromises)
+            .execute()
+            .then((results) => {
+                const actions = useModelStore.getState().actionEdges.map((actionEdge) => {
+                    const sourceEntity = useModelStore.getState().entityNodes.find(entity => entity.id === actionEdge.source);
+                    const targetEntity = useModelStore.getState().entityNodes.find(entity => entity.id === actionEdge.target);
+                    return {name: actionEdge.data?.name, source: sourceEntity?.data.name, target: targetEntity?.data.name, location: actionEdge.data?.sourceLocation, passage: actionEdge.data?.passage}
+                });
+                console.log("Extracted actions:", actions);
+            })
+            .catch((error) => {
+                console.error("Failed to refresh actions from text:", error);
+            })
+            .finally(() => {
+                if (onFinished) onFinished();
+                this.onRefreshDone();
             });
-            console.log("Extracted actions:", actions);
-            
-            if (onFinished) onFinished();
-            this.onRefreshDone();
-        });
 
 
         this.previousText = text;

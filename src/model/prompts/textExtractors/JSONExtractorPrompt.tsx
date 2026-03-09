@@ -19,6 +19,7 @@ export abstract class JSONExtractorPrompt<T> extends JSONPrompt<T> {
         if (useModelStore.getState().text.length > 0) {
             this.prompt = {prompt: this.getPrompt()};
             this.schema = this.getJSONSchema();
+            this.localTimeoutMs = 1800000;
 
             this.onPartialResponse = (result) => {
                 this.onPartialResult(result);

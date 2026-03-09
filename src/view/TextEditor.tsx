@@ -8,6 +8,7 @@ import { useModelStore } from '../model/Model';
 import { SlateUtils } from '../model/SlateUtils';
 import { TextUtils } from '../model/TextUtils';
 import { useViewModelStore } from '../model/ViewModel';
+import { VisualRefresher } from '../model/prompts/textExtractors/VisualRefresher';
 
 
 const Leaf = (props: any) => {
@@ -110,8 +111,10 @@ export default function TextEditor({overlayOnHover = true} : {overlayOnHover?: b
       if (idsToDecorate.length > 0) {
 
         for (const i of idsToDecorate) {
-          const start = textActionMatches[i].start;
-          const end = textActionMatches[i].end;
+          const match = textActionMatches[i];
+          if (!match) continue;
+          const start = match.start;
+          const end = match.end;
   
           const startPt = SlateUtils.toSlatePoint(useModelStore.getState().textState, start);
           const endPt = SlateUtils.toSlatePoint(useModelStore.getState().textState, end);
@@ -166,29 +169,43 @@ export default function TextEditor({overlayOnHover = true} : {overlayOnHover?: b
         }}
           editor={globalEditor} initialValue={useModelStore.getState().textState} onChange={newValue => {
             setTextState(newValue, false);
+            const updatedText = SlateUtils.stateToText(newValue);
+            const refresher = VisualRefresher.getInstance();
+            refresher.clearInvalidActions(updatedText);
+            refresher.clearInvalidEntities(updatedText);
+            refresher.clearInvalidLocations();
           }}>
           <Editable 
           readOnly={isReadOnly}
+          placeholder={isReadOnly ? "" : "Write or paste your story here..."}
           decorate={activeSelectionDecoration}
           onMouseLeave={() => {
             useModelStore.getState().setHighlightedActionsSegment(null, null);
           }}
           onMouseMove={(e) => {
             if (!overlayOnHover) return;
+            if (!globalEditor.children || globalEditor.children.length === 0) return;
             // Get the index of the character under the mouse
             const pos = TextUtils.caretPositionFromPoint(e.clientX, e.clientY);
             if (pos) {
-              const slatePoint = ReactEditor.toSlatePoint(globalEditor, [pos.offsetNode, pos.offset], { exactMatch: true, suppressThrow: true });
+              try {
+                if (!ReactEditor.hasDOMNode(globalEditor, pos.offsetNode)) return;
 
-              if (slatePoint) {
-                const index = SlateUtils.toStrIndex(globalEditor.children, slatePoint);
+                const slatePoint = ReactEditor.toSlatePoint(globalEditor, [pos.offsetNode, pos.offset], { exactMatch: true, suppressThrow: true });
 
-                const actions = TextUtils.getActionsAtPosition(useModelStore.getState().textActionMatches, index, index, true);
-                if (actions.length > 0) {
-                  useModelStore.getState().setHighlightedActionsSegment(actions[0].index, actions[actions.length - 1].index);
-                } else {
-                  useModelStore.getState().setHighlightedActionsSegment(null, null);
+                if (slatePoint) {
+                  const index = SlateUtils.toStrIndex(globalEditor.children, slatePoint);
+
+                  const actions = TextUtils.getActionsAtPosition(useModelStore.getState().textActionMatches, index, index, true);
+                  if (actions.length > 0) {
+                    useModelStore.getState().setHighlightedActionsSegment(actions[0].index, actions[actions.length - 1].index);
+                  } else {
+                    useModelStore.getState().setHighlightedActionsSegment(null, null);
+                  }
                 }
+              } catch (error) {
+                // Slate can briefly desync during route/state switches; ignore hover in that transient state.
+                useModelStore.getState().setHighlightedActionsSegment(null, null);
               }
             }
           }} renderLeaf={renderLeaf} />

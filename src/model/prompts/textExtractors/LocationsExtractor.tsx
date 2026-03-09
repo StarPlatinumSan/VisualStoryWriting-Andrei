@@ -52,6 +52,8 @@ export function LocationExtractor(text : string, center: {x: number, y: number})
         locationExtractor.execute().then((result) => {
             console.log("Extracted locations:", result.result);
             resolve(useModelStore.getState().locationNodes);
-    })
+        }).catch((error) => {
+            reject(error);
+        })
     });
 }
