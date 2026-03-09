@@ -23,32 +23,15 @@ import EntitiesEditor from './entityActionView/EntitiesEditor';
 import ImagesEditor from './imageView/ImagesEditor';
 import LocationsEditor from './locationView/LocationsEditor';
 
-function OpenAIRequiredPanel() {
-  return (
-    <div style={{ height: "100%", display: "grid", placeItems: "center", padding: 24 }}>
-      <div style={{ maxWidth: 560, background: "white", border: "1px solid #d1d5db", borderRadius: 12, padding: 18, boxShadow: "0 2px 10px rgba(0,0,0,0.06)" }}>
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>OpenAI Required For This Section</div>
-        <div style={{ color: "#4b5563", marginBottom: 12 }}>
-          Entities, actions, locations, and visual-text rewrite are enabled only with an OpenAI API key. Local mode remains available for Images.
-        </div>
-        <Button onClick={() => (window.location.hash = "/")}>Go to Launcher</Button>
-      </div>
-    </div>
-  );
-}
-
-
 export default function VisualWritingInterface(props: { children?: React.ReactNode }) {
   const [isExtracting, setIsExtracting] = useState(false);
   const [selectedTab, setSelectedTab] = useState('entities');
   const [imagesRefreshToken, setImagesRefreshToken] = useState(0);
   const [imageEntitiesForRewrite, setImageEntitiesForRewrite] = useState<ExtractedImageEntity[]>([]);
   const visualTopInset = 56;
-  const aiProvider = useModelStore(state => state.aiProvider);
   const isStale = useModelStore(state => state.isStale);
   const isReadOnly = useModelStore(state => state.isReadOnly);
   const escapePressed = useKeyPress(["Escape"]);
-  const isGraphModeEnabled = aiProvider === "openai";
 
   const visualPanelRef = React.createRef<HTMLDivElement>();
   const isFreeFormMode = !props.children;
@@ -74,25 +57,22 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   }, []);
 
   useEffect(() => {
-    if (!isGraphModeEnabled) return;
     if (escapePressed) {
       // Unselect everything that can be selected
       useModelStore.getState().setSelectedNodes([]);
       useModelStore.getState().setSelectedEdges([]);
       useModelStore.getState().setFilteredActionsSegment(null, null);
     }
-  }, [escapePressed, isGraphModeEnabled]);
+  }, [escapePressed]);
 
   useEffect(() => {
-    if (!isGraphModeEnabled) return;
     const center = { x: visualPanelRef.current!.clientWidth / 2, y: visualPanelRef.current!.clientHeight / 2 + visualTopInset / 2 };
 
     LayoutUtils.optimizeNodeLayout("entity", useModelStore.getState().entityNodes, useModelStore.getState().setEntityNodes, center, 120, 100);
     LayoutUtils.optimizeNodeLayout("location", useModelStore.getState().locationNodes, useModelStore.getState().setLocationNodes, center, 120);
-  }, [selectedTab, visualTopInset, isGraphModeEnabled]);
+  }, [selectedTab, visualTopInset]);
 
   useEffect(() => {
-    if (!isGraphModeEnabled) return;
     const center = { x: visualPanelRef.current!.clientWidth / 2, y: visualPanelRef.current!.clientHeight / 2 + visualTopInset / 2 };
 
     VisualRefresher.getInstance().onUpdate = () => {
@@ -105,7 +85,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
         useModelStore.getState().setIsStale(false);
       }
     };
-  }, [visualTopInset, isGraphModeEnabled]);
+  }, [visualTopInset]);
 
   const setSelectedTabLogged = (tab: string) => {
     useStudyStore.getState().logEvent("TAB_CHANGE", { tab });
@@ -116,15 +96,10 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       {isFreeFormMode && !isReadOnly && (
         <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "8px 16px", fontSize: 13, color: "#374151" }}>
-          {isGraphModeEnabled ? (
-            <>
-              <strong>How to start:</strong> write or paste your story on the left, then click <strong>Refresh from text</strong> (<TbArrowBigRightLinesFilled style={{ display: "inline", transform: "translateY(2px)" }} />) to generate entities, actions, and locations.
-            </>
-          ) : (
-            <>
-              <strong>Local mode:</strong> graph sections require OpenAI. The Images tab remains available in local mode.
-            </>
-          )}
+          <>
+            <strong>How to start:</strong> write or paste your story on the left, then choose a section and click <strong>Refresh from text</strong> (<TbArrowBigRightLinesFilled style={{ display: "inline", transform: "translateY(2px)" }} />).  
+            It will load only that section (Entities, Locations, or Images).
+          </>
         </div>
       )}
       <div style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, height: '80%' }}>
@@ -133,8 +108,8 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
         <div className='flex flex-col' style={{ position: 'relative' }}>
           <div style={{ width: '50vw', height: '100%', background: '#F3F4F6', borderLeft: '1px solid #DDDDDF', borderBottom: '1px solid #DDDDDF' }} ref={visualPanelRef}>
             <div style={{ paddingTop: visualTopInset, height: "100%", boxSizing: "border-box" }}>
-              {selectedTab === "entities" && (isGraphModeEnabled ? <ReactFlowProvider><EntitiesEditor /></ReactFlowProvider> : <OpenAIRequiredPanel />)}
-              {selectedTab === "locations" && (isGraphModeEnabled ? <ReactFlowProvider><LocationsEditor /></ReactFlowProvider> : <OpenAIRequiredPanel />)}
+              {selectedTab === "entities" && <ReactFlowProvider><EntitiesEditor /></ReactFlowProvider>}
+              {selectedTab === "locations" && <ReactFlowProvider><LocationsEditor /></ReactFlowProvider>}
               <div style={{ display: selectedTab === "images" ? "block" : "none", height: "100%" }}>
                 <ImagesEditor
                   refreshToken={imagesRefreshToken}
@@ -161,7 +136,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
               VisualRefresher.getInstance().reset();
             }}><FaTrashAlt /></Button>}
           </div>
-          {isGraphModeEnabled && <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>}
+          <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>
           {!isReadOnly && <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'absolute', left: 0, top: '50%', transform: 'translate(-50%, -50%)', fontSize: 22 }}>
             <Tooltip content={selectedTab === "images" ? "Refresh image entities from text" : "Refresh from text"} closeDelay={0}>
               <Button style={{ fontSize: 22 }} color={isStale ? "primary": "default"} isLoading={isExtracting} isIconOnly radius={'full'}
@@ -172,40 +147,18 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     return;
                   }
 
-                  if (!isGraphModeEnabled) {
-                    return;
-                  }
-
                   const center = { x: visualPanelRef.current!.clientWidth / 2, y: visualPanelRef.current!.clientHeight / 2 };
-
-                  const visualRefreshCallback = () => {
-                    VisualRefresher.getInstance().refreshFromText(useModelStore.getState().text,
-                      () => { },
-                      () => {
-                        setIsExtracting(false);
-                      });
-                  };
-
                   setIsExtracting(true);
-                  const pendingExtractors: Promise<any>[] = [];
                   const state = useModelStore.getState();
-                  if (state.entityNodes.length === 0) {
-                    pendingExtractors.push(EntitiesExtractor(state.text, center));
-                  }
-                  if (state.locationNodes.length === 0) {
-                    pendingExtractors.push(LocationExtractor(state.text, center));
-                  }
+                  const extractorPromise =
+                    selectedTab === "entities"
+                      ? EntitiesExtractor(state.text, center)
+                      : LocationExtractor(state.text, center);
 
-                  const refreshRequirements = pendingExtractors.length > 0
-                    ? Promise.all(pendingExtractors)
-                    : Promise.resolve();
-
-                  refreshRequirements
-                    .then(() => {
-                      visualRefreshCallback();
-                    })
+                  extractorPromise
+                    .then(() => setIsExtracting(false))
                     .catch((error) => {
-                      console.error("Failed to extract entities/locations:", error);
+                      console.error("Failed to extract from selected section:", error);
                       setIsExtracting(false);
                     });
                 }}
@@ -215,7 +168,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             </Tooltip>
             <Tooltip placement='bottom' content="Write from visual" closeDelay={0}>
               <Button style={{ fontSize: 22 }} isLoading={isExtracting} isIconOnly radius={'full'}
-                isDisabled={selectedTab === "images" ? imageEntitiesForRewrite.length === 0 : !isGraphModeEnabled}
+                isDisabled={selectedTab === "images" ? imageEntitiesForRewrite.length === 0 : false}
                 onClick={() => {
                   if (selectedTab === "images") {
                     if (imageEntitiesForRewrite.length === 0) return;
@@ -223,7 +176,6 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
                     return;
                   }
 
-                  if (!isGraphModeEnabled) return;
                   new RewriteFromVisual().execute();
                 }}
               >

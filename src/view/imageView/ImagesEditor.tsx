@@ -11,6 +11,7 @@ export default function ImagesEditor(props: { refreshToken?: number; onRefreshDo
   const [errorByEntityKey, setErrorByEntityKey] = useState<Record<string, string>>({});
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState("");
+  const [isGeneratingAnyImage, setIsGeneratingAnyImage] = useState(false);
 
   const getEntityKey = (entity: ExtractedImageEntity): string =>
     entity.name.trim().toLowerCase().replace(/\s+/g, " ");
@@ -21,8 +22,14 @@ export default function ImagesEditor(props: { refreshToken?: number; onRefreshDo
   };
 
   const generateEntityImage = async (entity: ExtractedImageEntity) => {
-    const key = getEntityKey(entity);
-    const prompt = buildImagePrompt(entity);
+    if (isGeneratingAnyImage) return;
+    const normalizedEntity: ExtractedImageEntity = {
+      ...entity,
+      traits: entity.traits.map((trait) => trait.trim()).filter((trait) => trait.length > 0),
+    };
+    const key = getEntityKey(normalizedEntity);
+    const prompt = buildImagePrompt(normalizedEntity);
+    setIsGeneratingAnyImage(true);
     setLoadingByEntityKey((state) => ({ ...state, [key]: true }));
     setErrorByEntityKey((state) => ({ ...state, [key]: "" }));
     try {
@@ -46,6 +53,7 @@ export default function ImagesEditor(props: { refreshToken?: number; onRefreshDo
       setErrorByEntityKey((state) => ({ ...state, [key]: error instanceof Error ? error.message : String(error) }));
     } finally {
       setLoadingByEntityKey((state) => ({ ...state, [key]: false }));
+      setIsGeneratingAnyImage(false);
     }
   };
 
@@ -222,14 +230,14 @@ export default function ImagesEditor(props: { refreshToken?: number; onRefreshDo
               <button
                 type="button"
                 onClick={() => generateEntityImage(entity)}
-                disabled={!!loadingByEntityKey[getEntityKey(entity)]}
+                disabled={isGeneratingAnyImage}
                 style={{
                   border: "1px solid #9ca3af",
                   borderRadius: 8,
                   padding: "6px 10px",
                   fontWeight: 600,
-                  background: loadingByEntityKey[getEntityKey(entity)] ? "#e5e7eb" : "white",
-                  cursor: loadingByEntityKey[getEntityKey(entity)] ? "wait" : "pointer",
+                  background: isGeneratingAnyImage ? "#e5e7eb" : "white",
+                  cursor: isGeneratingAnyImage ? "wait" : "pointer",
                 }}
               >
                 {loadingByEntityKey[getEntityKey(entity)]
