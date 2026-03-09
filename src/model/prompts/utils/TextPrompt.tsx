@@ -5,6 +5,12 @@ import { BasePrompt, ExecutablePrompt, PromptResult } from "./BasePrompt";
 const LOCAL_LLM_ENDPOINT = "http://127.0.0.1:3001/api/llm";
 const LOCAL_DEFAULT_MODEL = "mistral-7b-instruct-v0.2";
 
+function sanitizeModelTextResponse(content: string): string {
+    return content
+        .replace(/<think[\s\S]*?<\/think>/gi, "")
+        .trim();
+}
+
 export class TextPrompt extends BasePrompt<PromptResult<string>> {
     prompt: ExecutablePrompt;
     onPartialResponse: null | ((partialResult : PromptResult<string>) => void);
@@ -36,7 +42,7 @@ export class TextPrompt extends BasePrompt<PromptResult<string>> {
                         return;
                     }
                     const data = JSON.parse(raw);
-                    const response = data?.choices?.[0]?.message?.content || "";
+                    const response = sanitizeModelTextResponse(data?.choices?.[0]?.message?.content || "");
                     if (this.onPartialResponse) {
                         this.onPartialResponse({ result: response });
                     }
@@ -54,10 +60,10 @@ export class TextPrompt extends BasePrompt<PromptResult<string>> {
                 for await (const chunk of stream) {
                     response += chunk.choices[0]?.delta?.content || '';
                     if (this.onPartialResponse) {
-                        this.onPartialResponse({ result: response });
+                        this.onPartialResponse({ result: sanitizeModelTextResponse(response) });
                     }
                 }
-                resolve({ result: response });
+                resolve({ result: sanitizeModelTextResponse(response) });
                 } catch (error) {
                     reject(error instanceof Error ? error : new Error(String(error)));
                     return;

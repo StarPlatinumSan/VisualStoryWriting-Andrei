@@ -9,7 +9,9 @@ import { TbArrowBigLeftLinesFilled, TbArrowBigRightLinesFilled } from 'react-ico
 import { useHistoryModelStore } from '../model/HistoryModel';
 import { LayoutUtils } from '../model/LayoutUtils';
 import { useModelStore } from '../model/Model';
+import { RewriteFromImageTraits } from '../model/prompts/textEditors/RewriteFromImageTraits';
 import { RewriteFromVisual } from '../model/prompts/textEditors/RewriteFromVisual';
+import { ExtractedImageEntity } from '../model/prompts/textExtractors/ImageEntitiesExtractor';
 import { EntitiesExtractor } from '../model/prompts/textExtractors/EntitiesExtractor';
 import { LocationExtractor } from '../model/prompts/textExtractors/LocationsExtractor';
 import { VisualRefresher } from '../model/prompts/textExtractors/VisualRefresher';
@@ -40,6 +42,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [isExtracting, setIsExtracting] = useState(false);
   const [selectedTab, setSelectedTab] = useState('entities');
   const [imagesRefreshToken, setImagesRefreshToken] = useState(0);
+  const [imageEntitiesForRewrite, setImageEntitiesForRewrite] = useState<ExtractedImageEntity[]>([]);
   const visualTopInset = 56;
   const aiProvider = useModelStore(state => state.aiProvider);
   const isStale = useModelStore(state => state.isStale);
@@ -132,12 +135,13 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             <div style={{ paddingTop: visualTopInset, height: "100%", boxSizing: "border-box" }}>
               {selectedTab === "entities" && (isGraphModeEnabled ? <ReactFlowProvider><EntitiesEditor /></ReactFlowProvider> : <OpenAIRequiredPanel />)}
               {selectedTab === "locations" && (isGraphModeEnabled ? <ReactFlowProvider><LocationsEditor /></ReactFlowProvider> : <OpenAIRequiredPanel />)}
-              {selectedTab === "images" && (
+              <div style={{ display: selectedTab === "images" ? "block" : "none", height: "100%" }}>
                 <ImagesEditor
                   refreshToken={imagesRefreshToken}
                   onRefreshDone={() => setIsExtracting(false)}
+                  onEntitiesChange={setImageEntitiesForRewrite}
                 />
-              )}
+              </div>
             </div>
             <Tabs keyboardActivation='manual' onSelectionChange={setSelectedTabLogged as any} selectedKey={selectedTab} color='primary' variant='bordered' style={{ position: 'absolute', left: '50%', top: 10, transform: 'translate(-50%, 0)' }} classNames={{ tabList: 'bg-white', }}>
               <Tab key={"entities"} title={<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 15 }}><IoPersonCircle style={{ marginRight: 3, fontSize: 22 }} /> Entities & Actions</span>} />
@@ -211,8 +215,14 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
             </Tooltip>
             <Tooltip placement='bottom' content="Write from visual" closeDelay={0}>
               <Button style={{ fontSize: 22 }} isLoading={isExtracting} isIconOnly radius={'full'}
-                isDisabled={selectedTab === "images" || !isGraphModeEnabled}
+                isDisabled={selectedTab === "images" ? imageEntitiesForRewrite.length === 0 : !isGraphModeEnabled}
                 onClick={() => {
+                  if (selectedTab === "images") {
+                    if (imageEntitiesForRewrite.length === 0) return;
+                    new RewriteFromImageTraits(imageEntitiesForRewrite).execute();
+                    return;
+                  }
+
                   if (!isGraphModeEnabled) return;
                   new RewriteFromVisual().execute();
                 }}
