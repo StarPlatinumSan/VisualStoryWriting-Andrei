@@ -28,6 +28,32 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
     this.localTimeoutMs = null;
   }
 
+  sanitizeModelTextResponse(content: string): string {
+    return content
+      .replace(/<think[\s\S]*?<\/think>/gi, "")
+      .replace(/^\s+|\s+$/g, "");
+  }
+
+  normalizeLocalContent(content: unknown): string {
+    if (Array.isArray(content)) {
+      return content
+        .map((part) => {
+          if (typeof part === "string") return part;
+          if (part && typeof part === "object") {
+            const maybeText = (part as any).text ?? (part as any).content ?? "";
+            return typeof maybeText === "string" ? maybeText : String(maybeText);
+          }
+          return String(part ?? "");
+        })
+        .join("");
+    }
+    if (content && typeof content === "object") {
+      const maybeText = (content as any).text ?? (content as any).content ?? "";
+      return typeof maybeText === "string" ? maybeText : String(maybeText);
+    }
+    return String(content ?? "");
+  }
+
   getDefaultValue(field: z.ZodTypeAny): any {
     if (field instanceof z.ZodString) {
       return '';
@@ -112,7 +138,8 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
   }
 
   parseLocalResponse(response: string): T {
-    const extracted = this.extractJsonString(response);
+    const sanitized = this.sanitizeModelTextResponse(response);
+    const extracted = this.extractJsonString(sanitized);
 
     // 1) Strict parse first.
     try {
@@ -168,7 +195,12 @@ export class JSONPrompt<T> extends BasePrompt<PromptResult<T>> {
           throw new Error(`Invalid JSON envelope from local model: ${raw}`);
         }
 
-        const localResponse = data?.choices?.[0]?.message?.content || "";
+        const rawContent =
+          data?.choices?.[0]?.message?.content ??
+          data?.choices?.[0]?.message?.text ??
+          data?.choices?.[0]?.text ??
+          "";
+        const localResponse = this.sanitizeModelTextResponse(this.normalizeLocalContent(rawContent));
         const parsed = this.parseLocalResponse(localResponse);
         return { parsed, rawResponse: localResponse };
       } catch (error) {

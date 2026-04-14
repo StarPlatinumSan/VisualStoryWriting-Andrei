@@ -29,6 +29,7 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
   const [imagesRefreshToken, setImagesRefreshToken] = useState(0);
   const [imagesClearToken, setImagesClearToken] = useState(0);
   const [imageEntitiesForRewrite, setImageEntitiesForRewrite] = useState<ExtractedImageEntity[]>([]);
+  const [showTimeline, setShowTimeline] = useState(true);
   const visualTopInset = 56;
   const isStale = useModelStore(state => state.isStale);
   const isReadOnly = useModelStore(state => state.isReadOnly);
@@ -126,23 +127,30 @@ export default function VisualWritingInterface(props: { children?: React.ReactNo
               <Tab key={'images'} title={<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 15 }}><MdImage style={{ marginRight: 3, fontSize: 18 }} /> Images</span>} />
             </Tabs>
 
-            {!isReadOnly && <Button style={{ position: 'absolute', right: 10, top: 10, fontSize: 18 }} isIconOnly onClick={(e) => {
-              const confirmed = window.confirm("Clear all extracted data and image cards? This will remove entities, locations, actions, and images.");
-              if (!confirmed) return;
-              console.log(useModelStore.getState().entityNodes);
-              // Cancel exisitng animations because otherwise they might revive the deleted nodes
-              LayoutUtils.stopAllSimulations();
-              useModelStore.getState().setActionEdges([]);
-              useModelStore.getState().setLocationNodes([]);
-              useModelStore.getState().setEntityNodes([]);
-              useModelStore.getState().setFilteredActionsSegment(null, null);
-              useModelStore.getState().setHighlightedActionsSegment(null, null);
-              VisualRefresher.getInstance().reset();
-              setImageEntitiesForRewrite([]);
-              setImagesClearToken((v) => v + 1);
-            }}><FaTrashAlt /></Button>}
+            <div style={{ position: 'absolute', right: 10, top: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <Button size="sm" variant="flat" onClick={() => setShowTimeline((prev) => !prev)}>
+                {showTimeline ? "Hide timeline" : "Show timeline"}
+              </Button>
+              {!isReadOnly && (
+                <Button style={{ fontSize: 18 }} isIconOnly onClick={(e) => {
+                  const confirmed = window.confirm("Clear all extracted data and image cards? This will remove entities, locations, actions, and images.");
+                  if (!confirmed) return;
+                  console.log(useModelStore.getState().entityNodes);
+                  // Cancel exisitng animations because otherwise they might revive the deleted nodes
+                  LayoutUtils.stopAllSimulations();
+                  useModelStore.getState().setActionEdges([]);
+                  useModelStore.getState().setLocationNodes([]);
+                  useModelStore.getState().setEntityNodes([]);
+                  useModelStore.getState().setFilteredActionsSegment(null, null);
+                  useModelStore.getState().setHighlightedActionsSegment(null, null);
+                  VisualRefresher.getInstance().reset();
+                  setImageEntitiesForRewrite([]);
+                  setImagesClearToken((v) => v + 1);
+                }}><FaTrashAlt /></Button>
+              )}
+            </div>
           </div>
-          <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>
+          {showTimeline && <ReactFlowProvider><ActionTimeline /></ReactFlowProvider>}
           {!isReadOnly && <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'absolute', left: 0, top: '50%', transform: 'translate(-50%, -50%)', fontSize: 22 }}>
             <Tooltip content={selectedTab === "images" ? "Refresh image entities from text" : "Refresh from text"} closeDelay={0}>
               <Button style={{ fontSize: 22 }} color={isStale ? "primary": "default"} isLoading={isExtracting} isIconOnly radius={'full'}

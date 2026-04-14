@@ -51,14 +51,14 @@ Rules:
 				? entity.traits
 						.map((t) => String(t).trim())
 						.filter((t) => t.length > 0)
-						.slice(0, 5)
+						.slice()
 				: [];
 
 			if (!dedup.has(key)) {
 				dedup.set(key, { name, emoji, traits });
 			} else {
 				const prev = dedup.get(key)!;
-				const mergedTraits = Array.from(new Set([...(prev.traits || []), ...traits])).slice(0, 5);
+				const mergedTraits = Array.from(new Set([...(prev.traits || []), ...traits]));
 				dedup.set(key, { name: prev.name, emoji: prev.emoji, traits: mergedTraits });
 			}
 		}
@@ -80,8 +80,7 @@ Rules:
 				.slice()
 				.sort((a, b) => b.value - a.value)
 				.map((p) => p.name.trim())
-				.filter((name) => name.length > 0)
-				.slice(0, 5),
+				.filter((name) => name.length > 0),
 		}));
 	}
 
@@ -90,14 +89,14 @@ Rules:
 		for (const entity of [...primary, ...secondary]) {
 			const key = entity.name.toLowerCase();
 			if (!merged.has(key)) {
-				merged.set(key, { ...entity, traits: Array.from(new Set(entity.traits || [])).slice(0, 5) });
+				merged.set(key, { ...entity, traits: Array.from(new Set(entity.traits || [])) });
 				continue;
 			}
 			const prev = merged.get(key)!;
 			merged.set(key, {
 				...prev,
 				emoji: prev.emoji || entity.emoji,
-				traits: Array.from(new Set([...(prev.traits || []), ...(entity.traits || [])])).slice(0, 5),
+				traits: Array.from(new Set([...(prev.traits || []), ...(entity.traits || [])])),
 			});
 		}
 		return Array.from(merged.values());

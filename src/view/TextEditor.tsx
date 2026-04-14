@@ -1,8 +1,8 @@
 import { Button } from '@nextui-org/react';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { FaCheck } from 'react-icons/fa6';
 import { ImCross } from 'react-icons/im';
-import { Editor, NodeEntry, Range, Transforms, createEditor } from 'slate';
+import { Descendant, Editor, NodeEntry, Range, Transforms, createEditor } from 'slate';
 import { Editable, ReactEditor, RenderLeafProps, Slate, withReact } from "slate-react";
 import { useModelStore } from '../model/Model';
 import { SlateUtils } from '../model/SlateUtils';
@@ -56,6 +56,9 @@ export default function TextEditor({overlayOnHover = true} : {overlayOnHover?: b
   const divRef = React.createRef<HTMLDivElement>();
   const isTextSuggested = useModelStore(state => state.isTextSuggested)();
   const isReadOnly = useModelStore(state => state.isReadOnly);
+  const filteredSegmentRafRef = useRef<number | null>(null);
+  const onChangeRafRef = useRef<number | null>(null);
+  const pendingValueRef = useRef<Descendant[] | null>(null);
 
 
   const textActionMatches = useModelStore(state => state.textActionMatches);
@@ -68,6 +71,27 @@ export default function TextEditor({overlayOnHover = true} : {overlayOnHover?: b
 
   const renderLeaf = useCallback((props: RenderLeafProps) => {
     return <Leaf {...props} editor={globalEditor} />
+  }, []);
+
+  const scheduleFilteredSegmentUpdate = useCallback((startActionId: number | null, endActionId: number | null) => {
+    if (filteredSegmentRafRef.current !== null) {
+      cancelAnimationFrame(filteredSegmentRafRef.current);
+    }
+    filteredSegmentRafRef.current = requestAnimationFrame(() => {
+      filteredSegmentRafRef.current = null;
+      useModelStore.getState().setFilteredActionsSegment(startActionId, endActionId);
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (filteredSegmentRafRef.current !== null) {
+        cancelAnimationFrame(filteredSegmentRafRef.current);
+      }
+      if (onChangeRafRef.current !== null) {
+        cancelAnimationFrame(onChangeRafRef.current);
+      }
+    }
   }, []);
 
 
@@ -160,20 +184,28 @@ export default function TextEditor({overlayOnHover = true} : {overlayOnHover?: b
             const actions = TextUtils.getActionsAtPosition(useModelStore.getState().textActionMatches, Math.min(startIndex, endIndex), Math.max(startIndex, endIndex), true);
 
             if (actions.length > 0) {
-              useModelStore.getState().setFilteredActionsSegment(actions[0].index, actions[actions.length - 1].index);
+              scheduleFilteredSegmentUpdate(actions[0].index, actions[actions.length - 1].index);
             } else {
-              useModelStore.getState().setFilteredActionsSegment(null, null);
+              scheduleFilteredSegmentUpdate(null, null);
             }
           }
 
         }}
           editor={globalEditor} initialValue={useModelStore.getState().textState} onChange={newValue => {
-            setTextState(newValue, false);
-            const updatedText = SlateUtils.stateToText(newValue);
-            const refresher = VisualRefresher.getInstance();
-            refresher.clearInvalidActions(updatedText);
-            refresher.clearInvalidEntities(updatedText);
-            refresher.clearInvalidLocations();
+            pendingValueRef.current = newValue;
+            if (onChangeRafRef.current !== null) return;
+            onChangeRafRef.current = requestAnimationFrame(() => {
+              onChangeRafRef.current = null;
+              const latest = pendingValueRef.current;
+              if (!latest) return;
+              pendingValueRef.current = null;
+              setTextState(latest, false);
+              const updatedText = SlateUtils.stateToText(latest);
+              const refresher = VisualRefresher.getInstance();
+              refresher.clearInvalidActions(updatedText);
+              refresher.clearInvalidEntities(updatedText);
+              refresher.clearInvalidLocations();
+            });
           }}>
           <Editable 
           readOnly={isReadOnly}
